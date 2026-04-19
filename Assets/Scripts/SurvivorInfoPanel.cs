@@ -13,6 +13,7 @@ public class SurvivorInfoPanel : MonoBehaviour
     private GameObject panel;
     private TextMeshProUGUI nameText;
     private TextMeshProUGUI stateText;
+    private TextMeshProUGUI healthText;
     private TextMeshProUGUI hungerText;
     private Image[] slotBgs = new Image[SLOT_COUNT];
     private TextMeshProUGUI[] slotTexts = new TextMeshProUGUI[SLOT_COUNT];
