@@ -302,6 +302,8 @@ public class SurvivorController : MonoBehaviour
             float dist = Vector2.Distance(transform.position, rp.transform.position);
             if (dist < minDist) { minDist = dist; closest = rp; }
         }
+        if (closest != null && targetResourcePoint != closest)
+            Debug.Log($"[목표 설정] {gameObject.name} → {closest.itemName} ({closest.gameObject.name})");
         targetResourcePoint = closest;
     }
 
