@@ -16,8 +16,6 @@ public class FoodPoint : MonoBehaviour
         SpawnIcon();
     }
 
-    public bool isRevealed = false;
-
     void SpawnIcon()
     {
         if (foodPrefab == null)
@@ -51,11 +49,19 @@ public class FoodPoint : MonoBehaviour
         UpdateDisplay();
     }
 
-    public void Reveal()
+    void Update()
     {
-        if (isRevealed) return;
-        isRevealed = true;
-        SetVisible(true);
+        bool anyInRange = false;
+        foreach (var survivor in FindObjectsByType<SurvivorController>())
+        {
+            float dist = Vector2.Distance(transform.position, survivor.transform.position);
+            if (dist <= survivor.GetDetectionRadius())
+            {
+                anyInRange = true;
+                break;
+            }
+        }
+        SetVisible(anyInRange);
     }
 
     void SetVisible(bool visible)

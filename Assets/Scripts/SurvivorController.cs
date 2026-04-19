@@ -36,6 +36,8 @@ public class SurvivorController : MonoBehaviour
 
     public List<InventorySlot> inventory = new();
 
+    public float GetDetectionRadius() => detectionRange != null ? detectionRange.GetRadius() : 0f;
+
     public static readonly Dictionary<SurvivorState, string> stateLabels = new()
     {
         { SurvivorState.이동중,  "이동중"  },
