@@ -50,8 +50,40 @@ public class FoodPoint : MonoBehaviour
 
         UpdateDisplay();
 
-        // 신의 시점 → 항상 보임
         SetVisible(true);
+    }
+
+    void Update()
+    {
+        UpdateVisibility();
+    }
+
+    void UpdateVisibility()
+    {
+        if (ViewManager.Instance == null || ViewManager.Instance.IsGodView)
+        {
+            // 신의 시점: 모두 선명하게
+            SetAlpha(currentAmount > 0 ? 1f : 0.35f);
+        }
+        else
+        {
+            // 표류자 시점: 발견한 건 선명, 미발견은 흐리게
+            var survivor = ViewManager.Instance.Selected;
+            bool discovered = survivor != null && survivor.discoveredFoods.Contains(this);
+            SetAlpha(discovered ? (currentAmount > 0 ? 1f : 0.35f) : 0.15f);
+        }
+    }
+
+    void SetAlpha(float alpha)
+    {
+        if (iconRenderer != null)
+        {
+            var c = iconRenderer.color;
+            c.a = alpha;
+            iconRenderer.color = c;
+        }
+        if (amountText != null)
+            amountText.alpha = alpha;
     }
 
     void SetVisible(bool visible)
