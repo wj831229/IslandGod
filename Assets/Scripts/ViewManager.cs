@@ -1,5 +1,6 @@
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.UI;
+using TMPro;
 
 public class ViewManager : MonoBehaviour
 {
@@ -9,36 +10,60 @@ public class ViewManager : MonoBehaviour
     public SurvivorController Selected => selected;
     public bool IsGodView => selected == null;
 
-    // 같은 프레임에 표류자 클릭이 처리됐는지 추적
-    private bool survivorClickedThisFrame;
+    private GameObject godViewButton;
 
-    void Awake() => Instance = this;
-
-    void Update()
+    void Awake()
     {
-        if (Input.GetMouseButtonDown(0))
-        {
-            // UI 패널 위 클릭은 무시
-            if (EventSystem.current != null && EventSystem.current.IsPointerOverGameObject())
-                return;
+        Instance = this;
+        CreateGodViewButton();
+    }
 
-            // 표류자가 클릭되지 않았으면 신의 시점으로
-            if (!survivorClickedThisFrame)
-                Deselect();
-        }
+    void CreateGodViewButton()
+    {
+        Canvas canvas = FindAnyObjectByType<Canvas>();
+        if (canvas == null) return;
 
-        survivorClickedThisFrame = false;
+        godViewButton = new GameObject("GodViewButton");
+        godViewButton.transform.SetParent(canvas.transform, false);
+
+        RectTransform rt = godViewButton.AddComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0, 1);
+        rt.anchorMax = new Vector2(0, 1);
+        rt.pivot     = new Vector2(0, 1);
+        rt.anchoredPosition = new Vector2(10, -10);
+        rt.sizeDelta = new Vector2(130, 36);
+
+        Image bg = godViewButton.AddComponent<Image>();
+        bg.color = new Color(0.1f, 0.3f, 0.6f, 0.9f);
+
+        Button btn = godViewButton.AddComponent<Button>();
+        btn.onClick.AddListener(Deselect);
+
+        // 버튼 텍스트
+        GameObject textObj = new GameObject("Text");
+        textObj.transform.SetParent(godViewButton.transform, false);
+        RectTransform trt = textObj.AddComponent<RectTransform>();
+        trt.anchorMin = Vector2.zero;
+        trt.anchorMax = Vector2.one;
+        trt.offsetMin = trt.offsetMax = Vector2.zero;
+
+        TextMeshProUGUI tmp = textObj.AddComponent<TextMeshProUGUI>();
+        tmp.text = "👁 신의 시점";
+        tmp.fontSize = 14;
+        tmp.alignment = TextAlignmentOptions.Center;
+        tmp.color = Color.white;
+
+        // 처음엔 숨김 (신의 시점일 때는 버튼 불필요)
+        godViewButton.SetActive(false);
     }
 
     public void Select(SurvivorController survivor)
     {
-        survivorClickedThisFrame = true;
-
         // 이전 선택 해제
         if (selected != null && selected != survivor)
             selected.SetRingVisible(false);
 
-        // 같은 표류자를 다시 클릭하면 해제
+        // 같은 표류자 재클릭 → 해제
         if (selected == survivor)
         {
             Deselect();
@@ -48,6 +73,10 @@ public class ViewManager : MonoBehaviour
         selected = survivor;
         selected.SetRingVisible(true);
         SurvivorInfoPanel.Instance?.Show(survivor);
+
+        // 신의 시점 버튼 표시
+        if (godViewButton != null)
+            godViewButton.SetActive(true);
     }
 
     public void Deselect()
@@ -56,5 +85,9 @@ public class ViewManager : MonoBehaviour
             selected.SetRingVisible(false);
         selected = null;
         SurvivorInfoPanel.Instance?.Hide();
+
+        // 신의 시점 버튼 숨김
+        if (godViewButton != null)
+            godViewButton.SetActive(false);
     }
 }
