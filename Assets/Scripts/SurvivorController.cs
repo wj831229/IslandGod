@@ -15,6 +15,12 @@ public class SurvivorController : MonoBehaviour
     public float hungerDecreaseRate = 2f;
     public float hungerEatThreshold = 25f;
 
+    [Header("체력")]
+    public float health = 100f;
+    public float maxHealth = 100f;
+    public float healthTickInterval = 5f;  // 몇 초마다 체력 변화
+    private float healthTimer = 0f;
+
     private Vector2 targetPosition;
     private float wanderTimer;
     public float wanderInterval = 5f;
@@ -123,7 +129,26 @@ public class SurvivorController : MonoBehaviour
         hunger -= currentHungerRate * Time.deltaTime;
         hunger = Mathf.Clamp(hunger, 0, 100);
 
-        if (hunger <= 0) { SetState(SurvivorState.사망); Destroy(gameObject); return; }
+        // 체력 틱 처리
+        healthTimer += Time.deltaTime;
+        if (healthTimer >= healthTickInterval)
+        {
+            healthTimer = 0f;
+            if (hunger <= 0)
+            {
+                // 굶주린 상태 → 체력 1 감소
+                health = Mathf.Max(0, health - 1f);
+                Debug.Log($"[{gameObject.name}] 굶주림으로 체력 감소 → {health:F0}");
+            }
+            else if (health < maxHealth)
+            {
+                // 배부른 상태 → 체력 1 회복
+                health = Mathf.Min(maxHealth, health + 1f);
+            }
+        }
+
+        // 체력 0 → 사망
+        if (health <= 0) { SetState(SurvivorState.사망); Destroy(gameObject); return; }
 
         // 수면 중에는 아무것도 안 함
         if (isSleeping) return;
