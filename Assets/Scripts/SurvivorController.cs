@@ -200,25 +200,27 @@ public class SurvivorController : MonoBehaviour
         isGathering = true;
         gatherTimer = 0f;
         SetState(SurvivorState.채집중);
+        Debug.Log($"[채집 시작] targetFood={targetFood?.name}");
     }
 
     void CompleteGather()
     {
+        Debug.Log($"[채집 완료 시도] targetFood={(targetFood == null ? "NULL" : targetFood.name)}");
         if (targetFood == null) return;
 
         FoodItem item = targetFood.GetComponent<FoodItem>();
+        Debug.Log($"[FoodItem] item={(item == null ? "NULL" : "있음")}, foodPoint={(item?.foodPoint == null ? "NULL" : "있음")}");
+
         if (item != null)
         {
             inventory.Add("코코넛");
-            Debug.Log($"{gameObject.name} 채집 완료 → 인벤토리: [{string.Join(", ", inventory)}]");
+            Debug.Log($"[인벤토리 추가] 현재: [{string.Join(", ", inventory)}]");
 
             if (item.foodPoint != null)
                 item.foodPoint.OnFoodTaken();
         }
 
-        if (targetFood != null)
-            Destroy(targetFood);
-
+        Destroy(targetFood);
         targetFood = null;
         SetState(SurvivorState.이동중);
     }
@@ -232,7 +234,7 @@ public class SurvivorController : MonoBehaviour
         isEating = true;
         eatTimer = 0f;
         SetState(SurvivorState.먹는중);
-        Debug.Log($"{gameObject.name} {food} 섭취 시작 (배고픔: {hunger:F0})");
+        Debug.Log($"[먹는중 시작] {food} 섭취, 배고픔: {hunger:F0}");
     }
 
     void DetectFood()
