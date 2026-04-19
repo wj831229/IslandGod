@@ -32,7 +32,7 @@ public class DayNightCycle : MonoBehaviour
         // 밤 → 낮 전환 시점 = 밤 종료 → FoodPoint 리스폰
         if (wasNight && !nightNow)
         {
-            foreach (var fp in FindObjectsByType<FoodPoint>(FindObjectsSortMode.None))
+            foreach (var fp in FindObjectsByType<FoodPoint>())
                 fp.Restock();
         }
 
