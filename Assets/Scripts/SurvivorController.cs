@@ -38,6 +38,9 @@ public class SurvivorController : MonoBehaviour
 
     public float GetDetectionRadius() => detectionRange != null ? detectionRange.GetRadius() : 0f;
 
+    [Header("특성")]
+    public float discoveryBonus = 0f;  // 발견 확률 보너스 (0.2 = +20%)
+
     public static readonly Dictionary<SurvivorState, string> stateLabels = new()
     {
         { SurvivorState.이동중,  "이동중"  },
