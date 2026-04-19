@@ -18,13 +18,12 @@ public class SurvivorController : MonoBehaviour
     [Header("체력")]
     public float health = 100f;
     public float maxHealth = 100f;
-    public float healthTickInterval = 5f;  // 몇 초마다 체력 변화
+    public float healthTickInterval = 5f;
     private float healthTimer = 0f;
 
     private Vector2 targetPosition;
     private float wanderTimer;
     public float wanderInterval = 5f;
-    private FoodPoint targetFoodPoint;
     private DetectionRange detectionRange;
 
     private SurvivorState currentState = SurvivorState.이동중;
@@ -34,6 +33,10 @@ public class SurvivorController : MonoBehaviour
     private float gatherTimer;
     private const float gatherDuration = 3f;
     private bool isGathering;
+
+    // 현재 채집 대상 (음식 or 자원 둘 중 하나만 세팅)
+    private FoodPoint targetFoodPoint;
+    private ResourcePoint targetResourcePoint;
 
     private float eatTimer;
     private const float eatDuration = 2f;
@@ -45,16 +48,18 @@ public class SurvivorController : MonoBehaviour
     [Header("수면")]
     private bool isSleeping = false;
     private bool wasDay = true;
-    public float sleepHungerMultiplier = 0.4f; // 수면 중 배고픔 감소 배율
+    public float sleepHungerMultiplier = 0.4f;
 
     [Header("특성")]
-    public float discoveryBonus = 0f;  // 발견 확률 보너스 (0.2 = +20%)
+    public float discoveryBonus = 0f;
 
-    // 이 표류자가 발견한 FoodPoint 목록 (개인 기억)
-    public HashSet<FoodPoint> discoveredFoods = new();
+    // 발견 목록 (음식 / 자원 각각)
+    public HashSet<FoodPoint>     discoveredFoods     = new();
+    public HashSet<ResourcePoint> discoveredResources = new();
 
-    // FoodPoint별 "이미 범위 안에 있었는가" 추적 (진입 순간 판단용)
-    private HashSet<FoodPoint> foodsInRange = new();
+    // 진입 추적 (진입 순간 판단용)
+    private HashSet<FoodPoint>     foodsInRange     = new();
+    private HashSet<ResourcePoint> resourcesInRange = new();
 
     public float GetDetectionRadius() => detectionRange != null ? detectionRange.GetRadius() : 0f;
 
@@ -72,9 +77,7 @@ public class SurvivorController : MonoBehaviour
         { SurvivorState.사망,    "사망"    },
     };
 
-    // 씬에 존재하는 모든 표류자 목록
     public static readonly List<SurvivorController> All = new();
-
     void OnEnable()  => All.Add(this);
     void OnDisable() => All.Remove(this);
 
@@ -124,33 +127,26 @@ public class SurvivorController : MonoBehaviour
         else if (!wasDay && isDay) WakeUp();
         wasDay = isDay;
 
-        // 수면 중 배고픔 감소 속도 줄임
+        // 배고픔 감소
         float currentHungerRate = isSleeping ? hungerDecreaseRate * sleepHungerMultiplier : hungerDecreaseRate;
         hunger -= currentHungerRate * Time.deltaTime;
         hunger = Mathf.Clamp(hunger, 0, 100);
 
-        // 체력 틱 처리
+        // 체력 틱
         healthTimer += Time.deltaTime;
         if (healthTimer >= healthTickInterval)
         {
             healthTimer = 0f;
             if (hunger <= 0)
             {
-                // 굶주린 상태 → 체력 1 감소
                 health = Mathf.Max(0, health - 1f);
                 Debug.Log($"[{gameObject.name}] 굶주림으로 체력 감소 → {health:F0}");
             }
             else if (health < maxHealth)
-            {
-                // 배부른 상태 → 체력 1 회복
                 health = Mathf.Min(maxHealth, health + 1f);
-            }
         }
 
-        // 체력 0 → 사망
         if (health <= 0) { SetState(SurvivorState.사망); Destroy(gameObject); return; }
-
-        // 수면 중에는 아무것도 안 함
         if (isSleeping) return;
 
         if (isEating)
@@ -184,22 +180,37 @@ public class SurvivorController : MonoBehaviour
             return;
         }
 
+        // 비활성 타겟 초기화
         if (targetFoodPoint != null && !targetFoodPoint.gameObject.activeInHierarchy)
             targetFoodPoint = null;
+        if (targetResourcePoint != null && !targetResourcePoint.gameObject.activeInHierarchy)
+            targetResourcePoint = null;
 
-        // 발견 확률 체크 (진입 순간)
-        ScanForFood();
+        // 아이템 스캔 (음식 + 자원 동시)
+        ScanForItems();
 
-        // 알고 있는 음식 중 수량 있는 것으로 이동
-        if (targetFoodPoint == null)
-            FindTargetFromMemory();
+        // 우선순위: 배고프면 음식, 배부르면 자원
+        if (targetFoodPoint == null && hunger < 80f)
+            FindFoodTarget();
 
+        if (targetFoodPoint == null && targetResourcePoint == null)
+            FindResourceTarget();
+
+        // 이동 및 채집
         if (targetFoodPoint != null)
         {
             SetState(SurvivorState.이동중);
-            Vector2 foodPos = targetFoodPoint.transform.position;
-            transform.position = Vector2.MoveTowards(transform.position, foodPos, moveSpeed * Time.deltaTime);
-            if (Vector2.Distance(transform.position, foodPos) < 0.3f)
+            Vector2 pos = targetFoodPoint.transform.position;
+            transform.position = Vector2.MoveTowards(transform.position, pos, moveSpeed * Time.deltaTime);
+            if (Vector2.Distance(transform.position, pos) < 0.3f)
+                StartGather();
+        }
+        else if (targetResourcePoint != null)
+        {
+            SetState(SurvivorState.이동중);
+            Vector2 pos = targetResourcePoint.transform.position;
+            transform.position = Vector2.MoveTowards(transform.position, pos, moveSpeed * Time.deltaTime);
+            if (Vector2.Distance(transform.position, pos) < 0.3f)
                 StartGather();
         }
         else
@@ -211,60 +222,87 @@ public class SurvivorController : MonoBehaviour
         }
     }
 
-    // 인식범위 진입 순간에만 발견 확률 체크
-    void ScanForFood()
+    // 음식 + 자원 동시 스캔 (진입 순간만 발견 체크)
+    void ScanForItems()
     {
         float range = GetDetectionRadius();
 
-        // 파괴된 FoodPoint 정리
         foodsInRange.RemoveWhere(fp => fp == null);
         discoveredFoods.RemoveWhere(fp => fp == null);
+        resourcesInRange.RemoveWhere(rp => rp == null);
+        discoveredResources.RemoveWhere(rp => rp == null);
 
         foreach (var fp in FindObjectsByType<FoodPoint>())
         {
             if (fp == null) continue;
-            float dist = Vector2.Distance(transform.position, fp.transform.position);
-            bool inRange = dist <= range;
+            bool inRange   = Vector2.Distance(transform.position, fp.transform.position) <= range;
             bool wasInRange = foodsInRange.Contains(fp);
 
             if (inRange && !wasInRange)
             {
-                // 진입 순간 → 발견 확률 체크
                 foodsInRange.Add(fp);
-
                 if (!discoveredFoods.Contains(fp))
                 {
                     float chance = Mathf.Clamp01(fp.discoveryChance + discoveryBonus);
-                    float roll = Random.value;
-                    if (roll <= chance)
+                    if (Random.value <= chance)
                     {
                         discoveredFoods.Add(fp);
-                        Debug.Log($"[{gameObject.name}] {fp.gameObject.name} 발견! ({chance*100:F0}%)");
+                        Debug.Log($"[{gameObject.name}] 음식 발견: {fp.gameObject.name}");
                     }
                 }
             }
             else if (!inRange && wasInRange)
-            {
-                // 이탈 → 다음 진입 시 재체크 허용
                 foodsInRange.Remove(fp);
+        }
+
+        foreach (var rp in FindObjectsByType<ResourcePoint>())
+        {
+            if (rp == null) continue;
+            bool inRange    = Vector2.Distance(transform.position, rp.transform.position) <= range;
+            bool wasInRange = resourcesInRange.Contains(rp);
+
+            if (inRange && !wasInRange)
+            {
+                resourcesInRange.Add(rp);
+                if (!discoveredResources.Contains(rp))
+                {
+                    float chance = Mathf.Clamp01(rp.discoveryChance + discoveryBonus);
+                    if (Random.value <= chance)
+                    {
+                        discoveredResources.Add(rp);
+                        Debug.Log($"[{gameObject.name}] 자원 발견: {rp.itemName}");
+                    }
+                }
             }
+            else if (!inRange && wasInRange)
+                resourcesInRange.Remove(rp);
         }
     }
 
-    // 자신이 아는 FoodPoint 중 수량 있는 가장 가까운 곳을 목표로
-    void FindTargetFromMemory()
+    void FindFoodTarget()
     {
         FoodPoint closest = null;
         float minDist = float.MaxValue;
-
         foreach (var fp in discoveredFoods)
         {
             if (fp == null || fp.currentAmount <= 0) continue;
             float dist = Vector2.Distance(transform.position, fp.transform.position);
             if (dist < minDist) { minDist = dist; closest = fp; }
         }
-
         targetFoodPoint = closest;
+    }
+
+    void FindResourceTarget()
+    {
+        ResourcePoint closest = null;
+        float minDist = float.MaxValue;
+        foreach (var rp in discoveredResources)
+        {
+            if (rp == null || rp.currentAmount <= 0) continue;
+            float dist = Vector2.Distance(transform.position, rp.transform.position);
+            if (dist < minDist) { minDist = dist; closest = rp; }
+        }
+        targetResourcePoint = closest;
     }
 
     void StartSleep()
@@ -273,8 +311,8 @@ public class SurvivorController : MonoBehaviour
         isGathering = false;
         isEating = false;
         targetFoodPoint = null;
+        targetResourcePoint = null;
         SetState(SurvivorState.수면중);
-        Debug.Log($"[{gameObject.name}] 수면 시작");
     }
 
     void WakeUp()
@@ -282,7 +320,6 @@ public class SurvivorController : MonoBehaviour
         isSleeping = false;
         SetNewTarget();
         SetState(SurvivorState.이동중);
-        Debug.Log($"[{gameObject.name}] 기상");
     }
 
     void StartGather()
@@ -294,29 +331,43 @@ public class SurvivorController : MonoBehaviour
 
     void CompleteGather()
     {
-        if (targetFoodPoint == null) return;
-
-        // 채집 완료 시점에 수량 재확인 (다른 표류자가 먼저 가져갔을 수 있음)
-        if (targetFoodPoint.currentAmount <= 0)
+        // 음식 채집
+        if (targetFoodPoint != null)
         {
-            Debug.Log($"[채집 실패] {gameObject.name} → {targetFoodPoint.gameObject.name} 수량 없음");
+            if (targetFoodPoint.currentAmount <= 0)
+            {
+                Debug.Log($"[채집 실패] {gameObject.name} → 음식 수량 없음");
+                targetFoodPoint = null;
+                SetState(SurvivorState.이동중);
+                return;
+            }
+            FoodItem item = targetFoodPoint.GetComponentInChildren<FoodItem>();
+            string fname = item != null ? item.itemName : "코코넛";
+            int fstack = fname == "코코넛" ? 3 : 20;
+            AddToInventory(fname, fstack);
+            targetFoodPoint.OnFoodTaken();
+            Debug.Log($"[채집] {gameObject.name} {fname} 획득");
             targetFoodPoint = null;
             SetState(SurvivorState.이동중);
             return;
         }
 
-        FoodItem item = targetFoodPoint.GetComponent<FoodItem>();
-        if (item == null) item = targetFoodPoint.gameObject.GetComponentInChildren<FoodItem>();
-
-        string name = item != null ? item.itemName : "코코넛";
-        int maxStack = name == "코코넛" ? 3 : 20;
-
-        AddToInventory(name, maxStack);
-        targetFoodPoint.OnFoodTaken();
-
-        Debug.Log($"[채집 완료] {gameObject.name} {name} 획득 → {GetInventorySummary()}");
-        targetFoodPoint = null;
-        SetState(SurvivorState.이동중);
+        // 자원 채집
+        if (targetResourcePoint != null)
+        {
+            if (targetResourcePoint.currentAmount <= 0)
+            {
+                Debug.Log($"[채집 실패] {gameObject.name} → 자원 수량 없음");
+                targetResourcePoint = null;
+                SetState(SurvivorState.이동중);
+                return;
+            }
+            AddToInventory(targetResourcePoint.itemName, 10);
+            targetResourcePoint.OnResourceTaken();
+            Debug.Log($"[채집] {gameObject.name} {targetResourcePoint.itemName} 획득");
+            targetResourcePoint = null;
+            SetState(SurvivorState.이동중);
+        }
     }
 
     void AddToInventory(string itemName, int maxStack = 20)
@@ -335,7 +386,7 @@ public class SurvivorController : MonoBehaviour
 
     void StartEating()
     {
-        var slot = inventory.Find(s => s.count > 0);
+        var slot = inventory.Find(s => s.itemName == "코코넛" || s.itemName == "베리" || s.itemName == "생선");
         if (slot == null) return;
 
         pendingHungerRestore = 40f;
@@ -345,7 +396,6 @@ public class SurvivorController : MonoBehaviour
         isEating = true;
         eatTimer = 0f;
         SetState(SurvivorState.먹는중);
-        Debug.Log($"[먹는중] {slot.itemName} 섭취 시작, 배고픔: {hunger:F0}");
     }
 
     public void SetRingVisible(bool visible)

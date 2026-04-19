@@ -34,6 +34,8 @@ public class DayNightCycle : MonoBehaviour
         {
             foreach (var fp in FindObjectsByType<FoodPoint>())
                 fp.Restock();
+            foreach (var rp in FindObjectsByType<ResourcePoint>())
+                rp.Restock();
         }
 
         wasNight = nightNow;
