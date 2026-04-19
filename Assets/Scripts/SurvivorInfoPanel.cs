@@ -23,7 +23,7 @@ public class SurvivorInfoPanel : MonoBehaviour
 
     void BuildPanel()
     {
-        Canvas canvas = FindFirstObjectByType<Canvas>();
+        Canvas canvas = FindAnyObjectByType<Canvas>();
         if (canvas == null)
         {
             GameObject canvasObj = new GameObject("InfoCanvas");
