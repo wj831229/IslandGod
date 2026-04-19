@@ -205,16 +205,17 @@ public class SurvivorController : MonoBehaviour
     void DetectFood()
     {
         if (targetFood != null) return;
-        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, detectionRange.GetRadius());
-        foreach (var hit in hits)
+        float range = detectionRange.GetRadius();
+
+        foreach (var food in FindObjectsByType<FoodItem>())
         {
-            if (hit == null || hit.gameObject == null || !hit.gameObject.activeInHierarchy) continue;
-            if (!hit.CompareTag("Food")) continue;
-            FoodItem item = hit.GetComponent<FoodItem>();
-            // 수량이 0이면 스킵
-            if (item != null && item.foodPoint != null && item.foodPoint.currentAmount <= 0) continue;
-            targetFood = hit.gameObject;
-            break;
+            if (food == null || food.gameObject == null) continue;
+            if (food.foodPoint != null && food.foodPoint.currentAmount <= 0) continue;
+            if (Vector2.Distance(transform.position, food.transform.position) <= range)
+            {
+                targetFood = food.gameObject;
+                return;
+            }
         }
     }
 
