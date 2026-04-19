@@ -205,20 +205,17 @@ public class SurvivorController : MonoBehaviour
 
     void CompleteGather()
     {
-        Debug.Log($"[채집 완료 시도] targetFood={(targetFood == null ? "NULL" : targetFood.name)}");
         if (targetFood == null) return;
 
         FoodItem item = targetFood.GetComponent<FoodItem>();
-        Debug.Log($"[FoodItem] item={(item == null ? "NULL" : "있음")}, foodPoint={(item?.foodPoint == null ? "NULL" : "있음")}");
 
-        if (item != null)
-        {
-            inventory.Add("코코넛");
-            Debug.Log($"[인벤토리 추가] 현재: [{string.Join(", ", inventory)}]");
+        // FoodItem 있으면 FoodPoint에 알림
+        if (item != null && item.foodPoint != null)
+            item.foodPoint.OnFoodTaken();
 
-            if (item.foodPoint != null)
-                item.foodPoint.OnFoodTaken();
-        }
+        // FoodItem 유무 관계없이 인벤토리에 추가
+        inventory.Add("코코넛");
+        Debug.Log($"[인벤토리 추가] 현재: [{string.Join(", ", inventory)}]");
 
         Destroy(targetFood);
         targetFood = null;
