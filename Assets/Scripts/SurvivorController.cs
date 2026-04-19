@@ -59,17 +59,30 @@ public class SurvivorController : MonoBehaviour
         UpdateStatusText();
     }
 
+    static readonly System.Collections.Generic.Dictionary<SurvivorState, string> stateLabels = new()
+    {
+        { SurvivorState.이동중,  "Moving"   },
+        { SurvivorState.먹는중,  "Eating"   },
+        { SurvivorState.마시는중, "Drinking" },
+        { SurvivorState.수면중,  "Sleeping" },
+        { SurvivorState.건설중,  "Building" },
+        { SurvivorState.전투중,  "Fighting" },
+        { SurvivorState.대화중,  "Talking"  },
+        { SurvivorState.탈출중,  "Escaping" },
+        { SurvivorState.사망,    "Dead"     },
+    };
+
     void UpdateStatusText()
     {
         if (statusText == null) return;
-        statusText.text = currentState.ToString();
+        statusText.text = stateLabels[currentState];
 
         statusText.color = currentState switch
         {
             SurvivorState.먹는중 => Color.green,
             SurvivorState.전투중 => Color.red,
             SurvivorState.수면중 => new Color(0.5f, 0.7f, 1f),
-            SurvivorState.사망 => Color.gray,
+            SurvivorState.사망   => Color.gray,
             _ => Color.white
         };
     }
