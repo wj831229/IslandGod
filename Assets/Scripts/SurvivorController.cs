@@ -327,6 +327,11 @@ public class SurvivorController : MonoBehaviour
         isGathering = true;
         gatherTimer = 0f;
         SetState(SurvivorState.채집중);
+
+        if (targetFoodPoint != null)
+            Debug.Log($"[채집 시작] {gameObject.name} → 음식: {targetFoodPoint.gameObject.name}");
+        else if (targetResourcePoint != null)
+            Debug.Log($"[채집 시작] {gameObject.name} → 자원: {targetResourcePoint.itemName}");
     }
 
     void CompleteGather()
