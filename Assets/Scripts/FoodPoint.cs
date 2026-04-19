@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.Collections.Generic;
+using TMPro;
 
 public class FoodPoint : MonoBehaviour
 {
@@ -7,14 +7,16 @@ public class FoodPoint : MonoBehaviour
     public int maxAmount = 5;
     public int currentAmount = 5;
 
-    private List<GameObject> spawnedFoods = new();
+    private GameObject foodIcon;
+    private TextMeshPro amountText;
+    private SpriteRenderer iconRenderer;
 
     void Start()
     {
-        SpawnAll();
+        SpawnIcon();
     }
 
-    void SpawnAll()
+    void SpawnIcon()
     {
         if (foodPrefab == null)
         {
@@ -22,46 +24,62 @@ public class FoodPoint : MonoBehaviour
             return;
         }
 
-        for (int i = 0; i < currentAmount; i++)
-            SpawnOne(i);
-    }
+        foodIcon = Instantiate(foodPrefab, transform.position, Quaternion.identity);
 
-    void SpawnOne(int index)
-    {
-        if (foodPrefab == null) return;
-
-        // 포인트 주변에 약간씩 퍼뜨려서 배치
-        float angle = index * (360f / maxAmount) * Mathf.Deg2Rad;
-        float radius = 0.2f;
-        Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0);
-        Vector3 pos = transform.position + offset;
-
-        GameObject food = Instantiate(foodPrefab, pos, Quaternion.identity);
-        FoodItem item = food.GetComponent<FoodItem>();
-        if (item == null) item = food.AddComponent<FoodItem>();
+        FoodItem item = foodIcon.GetComponent<FoodItem>();
+        if (item == null) item = foodIcon.AddComponent<FoodItem>();
         item.foodPoint = this;
         item.hungerRestore = 40f;
 
-        spawnedFoods.Add(food);
+        iconRenderer = foodIcon.GetComponent<SpriteRenderer>();
+
+        // 수량 텍스트 생성
+        GameObject textObj = new GameObject("AmountText");
+        textObj.transform.SetParent(foodIcon.transform);
+        textObj.transform.localPosition = new Vector3(0, 0.3f, 0);
+
+        amountText = textObj.AddComponent<TextMeshPro>();
+        amountText.fontSize = 1.2f;
+        amountText.alignment = TextAlignmentOptions.Center;
+        amountText.sortingOrder = 5;
+
+        UpdateDisplay();
+    }
+
+    void UpdateDisplay()
+    {
+        if (amountText != null)
+        {
+            amountText.text = $"{currentAmount}/{maxAmount}";
+            amountText.color = currentAmount > 0 ? Color.white : Color.gray;
+        }
+
+        if (iconRenderer != null)
+        {
+            // 수량 0이면 반투명하게
+            var c = iconRenderer.color;
+            c.a = currentAmount > 0 ? 1f : 0.35f;
+            iconRenderer.color = c;
+        }
+
+        // 수량 0이면 Food 태그 제거 (채집 불가)
+        if (foodIcon != null)
+            foodIcon.tag = currentAmount > 0 ? "Food" : "Untagged";
     }
 
     public void OnFoodTaken()
     {
         currentAmount--;
-
-        // 파괴된 오브젝트 목록 정리
-        spawnedFoods.RemoveAll(f => f == null);
-
-        Debug.Log($"[FoodPoint] 남은 수량: {currentAmount}/{maxAmount}");
+        UpdateDisplay();
+        Debug.Log($"[FoodPoint] {currentAmount}/{maxAmount}");
     }
 
-    // DayNightCycle에서 밤 종료 시 호출
+    // DayNightCycle에서 밤→낮 전환 시 호출
     public void Restock()
     {
         if (currentAmount >= maxAmount) return;
-
         currentAmount++;
-        SpawnOne(spawnedFoods.Count);
+        UpdateDisplay();
         Debug.Log($"[FoodPoint] 리스폰 +1 → {currentAmount}/{maxAmount}");
     }
 }
