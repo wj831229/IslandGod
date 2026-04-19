@@ -17,6 +17,11 @@ public class FoodPoint : MonoBehaviour
     {
         if (currentAmount <= 0) return;
         if (spawnedFood != null) return;
+        if (foodPrefab == null)
+        {
+            Debug.LogError($"[FoodPoint] foodPrefab is null on {gameObject.name}. Assign it in Inspector.", this);
+            return;
+        }
 
         spawnedFood = Instantiate(foodPrefab, transform.position, Quaternion.identity);
         FoodItem item = spawnedFood.GetComponent<FoodItem>();
