@@ -50,13 +50,13 @@ public class SurvivorInfoPanel : MonoBehaviour
         nameText = CreateText("NameText", panel, new Vector2(0, -40), 22, FontStyles.Bold);
 
         // 구분선 레이블
-        CreateLabel("StateLabel", panel, new Vector2(0, -90), "[ STATUS ]", 14, new Color(1f, 0.8f, 0.2f));
+        CreateLabel("StateLabel", panel, new Vector2(0, -90), "[ 상태 ]", 14, new Color(1f, 0.8f, 0.2f));
         stateText = CreateText("StateText", panel, new Vector2(0, -120), 18);
 
-        CreateLabel("HungerLabel", panel, new Vector2(0, -165), "[ HUNGER ]", 14, new Color(1f, 0.8f, 0.2f));
+        CreateLabel("HungerLabel", panel, new Vector2(0, -165), "[ 배고픔 ]", 14, new Color(1f, 0.8f, 0.2f));
         hungerText = CreateText("HungerText", panel, new Vector2(0, -195), 16);
 
-        CreateLabel("InvLabel", panel, new Vector2(0, -240), "[ INVENTORY ]", 14, new Color(1f, 0.8f, 0.2f));
+        CreateLabel("InvLabel", panel, new Vector2(0, -240), "[ 인벤토리 ]", 14, new Color(1f, 0.8f, 0.2f));
         inventoryText = CreateText("InvText", panel, new Vector2(0, -310), 15);
         inventoryText.GetComponent<RectTransform>().sizeDelta = new Vector2(280, 200);
     }
