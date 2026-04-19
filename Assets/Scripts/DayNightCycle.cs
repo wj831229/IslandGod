@@ -4,7 +4,7 @@ public class DayNightCycle : MonoBehaviour
 {
     public static DayNightCycle Instance;
 
-    public float dayLength = 300f;
+    public float dayLength = 100f;
     public float currentTime = 0f;
     public int currentDay = 1;
     public bool isDay = true;
