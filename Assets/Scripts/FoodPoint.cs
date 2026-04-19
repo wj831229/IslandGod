@@ -67,10 +67,13 @@ public class FoodPoint : MonoBehaviour
         }
         else
         {
-            // 표류자 시점: 발견한 건 선명, 미발견은 흐리게
+            // 표류자 시점: 발견한 건 선명, 미발견은 숨김
             var survivor = ViewManager.Instance.Selected;
             bool discovered = survivor != null && survivor.discoveredFoods.Contains(this);
-            SetAlpha(discovered ? (currentAmount > 0 ? 1f : 0.35f) : 0.15f);
+            if (discovered)
+                SetAlpha(currentAmount > 0 ? 1f : 0.35f);
+            else
+                SetVisible(false);
         }
     }
 
