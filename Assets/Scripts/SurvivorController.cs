@@ -160,7 +160,7 @@ public class SurvivorController : MonoBehaviour
 
         FoodItem item = targetFood.GetComponent<FoodItem>();
         string name = item != null ? item.itemName : "코코넛";
-        int maxStack = 20;
+        int maxStack = name == "코코넛" ? 3 : 20;
 
         AddToInventory(name, maxStack);
 
