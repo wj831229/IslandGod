@@ -112,10 +112,21 @@ public class SurvivorController : MonoBehaviour
 
     void Update()
     {
-        hunger -= hungerDecreaseRate * Time.deltaTime;
+        // 낮/밤 전환 감지
+        bool isDay = DayNightCycle.Instance == null || DayNightCycle.Instance.IsDay();
+        if (wasDay && !isDay)  StartSleep();
+        else if (!wasDay && isDay) WakeUp();
+        wasDay = isDay;
+
+        // 수면 중 배고픔 감소 속도 줄임
+        float currentHungerRate = isSleeping ? hungerDecreaseRate * sleepHungerMultiplier : hungerDecreaseRate;
+        hunger -= currentHungerRate * Time.deltaTime;
         hunger = Mathf.Clamp(hunger, 0, 100);
 
         if (hunger <= 0) { SetState(SurvivorState.사망); Destroy(gameObject); return; }
+
+        // 수면 중에는 아무것도 안 함
+        if (isSleeping) return;
 
         if (isEating)
         {
