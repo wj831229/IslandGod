@@ -36,6 +36,11 @@ public class SurvivorController : MonoBehaviour
 
     public List<InventorySlot> inventory = new();
 
+    [Header("수면")]
+    private bool isSleeping = false;
+    private bool wasDay = true;
+    public float sleepHungerMultiplier = 0.4f; // 수면 중 배고픔 감소 배율
+
     [Header("특성")]
     public float discoveryBonus = 0f;  // 발견 확률 보너스 (0.2 = +20%)
 
