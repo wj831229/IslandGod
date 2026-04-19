@@ -1,4 +1,18 @@
 using UnityEngine;
+using TMPro;
+
+public enum SurvivorState
+{
+    이동중,
+    먹는중,
+    마시는중,
+    수면중,
+    건설중,
+    전투중,
+    대화중,
+    탈출중,
+    사망
+}
 
 public class SurvivorController : MonoBehaviour
 {
@@ -12,13 +26,52 @@ public class SurvivorController : MonoBehaviour
     private GameObject targetFood;
     private DetectionRange detectionRange;
 
+    private SurvivorState currentState = SurvivorState.이동중;
+    private TextMeshPro statusText;
+
     void Start()
     {
         detectionRange = GetComponent<DetectionRange>();
         if (detectionRange == null)
             detectionRange = gameObject.AddComponent<DetectionRange>();
 
+        CreateStatusText();
         SetNewTarget();
+    }
+
+    void CreateStatusText()
+    {
+        GameObject textObj = new GameObject("StatusText");
+        textObj.transform.SetParent(transform);
+        textObj.transform.localPosition = new Vector3(0, 0.4f, 0);
+
+        statusText = textObj.AddComponent<TextMeshPro>();
+        statusText.fontSize = 1.5f;
+        statusText.alignment = TextAlignmentOptions.Center;
+        statusText.sortingOrder = 10;
+        UpdateStatusText();
+    }
+
+    void SetState(SurvivorState newState)
+    {
+        if (currentState == newState) return;
+        currentState = newState;
+        UpdateStatusText();
+    }
+
+    void UpdateStatusText()
+    {
+        if (statusText == null) return;
+        statusText.text = currentState.ToString();
+
+        statusText.color = currentState switch
+        {
+            SurvivorState.먹는중 => Color.green,
+            SurvivorState.전투중 => Color.red,
+            SurvivorState.수면중 => new Color(0.5f, 0.7f, 1f),
+            SurvivorState.사망 => Color.gray,
+            _ => Color.white
+        };
     }
 
     void Update()
@@ -28,12 +81,12 @@ public class SurvivorController : MonoBehaviour
 
         if (hunger <= 0)
         {
+            SetState(SurvivorState.사망);
             Debug.Log(gameObject.name + " 사망!");
             Destroy(gameObject);
             return;
         }
 
-        // 타겟 음식이 파괴됐으면 null로
         if (targetFood != null && !targetFood.activeInHierarchy)
             targetFood = null;
 
@@ -41,17 +94,14 @@ public class SurvivorController : MonoBehaviour
 
         if (targetFood != null)
         {
+            SetState(SurvivorState.이동중);
             transform.position = Vector2.MoveTowards(
                 transform.position,
                 targetFood.transform.position,
                 moveSpeed * Time.deltaTime
             );
 
-            float dist = Vector2.Distance(
-                transform.position,
-                targetFood.transform.position
-            );
-
+            float dist = Vector2.Distance(transform.position, targetFood.transform.position);
             if (dist < 0.3f)
                 EatFood();
         }
@@ -64,6 +114,7 @@ public class SurvivorController : MonoBehaviour
                 wanderTimer = 0f;
             }
 
+            SetState(SurvivorState.이동중);
             transform.position = Vector2.MoveTowards(
                 transform.position,
                 targetPosition,
@@ -77,9 +128,7 @@ public class SurvivorController : MonoBehaviour
         if (targetFood != null) return;
 
         float range = detectionRange.GetRadius();
-        Collider2D[] hits = Physics2D.OverlapCircleAll(
-            transform.position, range
-        );
+        Collider2D[] hits = Physics2D.OverlapCircleAll(transform.position, range);
 
         foreach (Collider2D hit in hits)
         {
@@ -98,6 +147,8 @@ public class SurvivorController : MonoBehaviour
     void EatFood()
     {
         if (targetFood == null) return;
+
+        SetState(SurvivorState.먹는중);
 
         FoodItem item = targetFood.GetComponent<FoodItem>();
         if (item != null && item.foodPoint != null)
