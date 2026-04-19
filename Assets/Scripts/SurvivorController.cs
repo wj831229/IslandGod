@@ -351,7 +351,7 @@ public class SurvivorController : MonoBehaviour
             int fstack = fname == "코코넛" ? 3 : 20;
             AddToInventory(fname, fstack);
             targetFoodPoint.OnFoodTaken();
-            Debug.Log($"[채집] {gameObject.name} {fname} 획득");
+            Debug.Log($"[채집 완료] {gameObject.name} → {fname} 획득! 인벤토리: {GetInventorySummary()}");
             targetFoodPoint = null;
             SetState(SurvivorState.이동중);
             return;
@@ -362,14 +362,15 @@ public class SurvivorController : MonoBehaviour
         {
             if (targetResourcePoint.currentAmount <= 0)
             {
-                Debug.Log($"[채집 실패] {gameObject.name} → 자원 수량 없음");
+                Debug.Log($"[채집 실패] {gameObject.name} → {targetResourcePoint.itemName} 수량 없음");
                 targetResourcePoint = null;
                 SetState(SurvivorState.이동중);
                 return;
             }
-            AddToInventory(targetResourcePoint.itemName, 10);
+            string rName = targetResourcePoint.itemName;
+            AddToInventory(rName, 10);
             targetResourcePoint.OnResourceTaken();
-            Debug.Log($"[채집] {gameObject.name} {targetResourcePoint.itemName} 획득");
+            Debug.Log($"[채집 완료] {gameObject.name} → {rName} 획득! 인벤토리: {GetInventorySummary()}");
             targetResourcePoint = null;
             SetState(SurvivorState.이동중);
         }
