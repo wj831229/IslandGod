@@ -134,7 +134,7 @@ public class SurvivorInfoPanel : MonoBehaviour
                          : Color.red;
 
         if (currentSurvivor.inventory.Count == 0)
-            inventoryText.text = "(empty)";
+            inventoryText.text = "(비어있음)";
         else
         {
             var counts = new System.Collections.Generic.Dictionary<string, int>();
