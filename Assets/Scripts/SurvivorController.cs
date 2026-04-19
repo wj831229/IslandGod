@@ -237,6 +237,15 @@ public class SurvivorController : MonoBehaviour
     {
         if (targetFoodPoint == null) return;
 
+        // 채집 완료 시점에 수량 재확인 (다른 표류자가 먼저 가져갔을 수 있음)
+        if (targetFoodPoint.currentAmount <= 0)
+        {
+            Debug.Log($"[채집 실패] {gameObject.name} → {targetFoodPoint.gameObject.name} 수량 없음");
+            targetFoodPoint = null;
+            SetState(SurvivorState.이동중);
+            return;
+        }
+
         FoodItem item = targetFoodPoint.GetComponent<FoodItem>();
         if (item == null) item = targetFoodPoint.gameObject.GetComponentInChildren<FoodItem>();
 
@@ -246,7 +255,7 @@ public class SurvivorController : MonoBehaviour
         AddToInventory(name, maxStack);
         targetFoodPoint.OnFoodTaken();
 
-        Debug.Log($"[채집 완료] {name} 추가 → {GetInventorySummary()}");
+        Debug.Log($"[채집 완료] {gameObject.name} {name} 획득 → {GetInventorySummary()}");
         targetFoodPoint = null;
         SetState(SurvivorState.이동중);
     }
