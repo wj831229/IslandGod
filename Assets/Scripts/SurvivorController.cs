@@ -40,7 +40,7 @@ public class SurvivorController : MonoBehaviour
     // 인벤토리
     public List<string> inventory = new List<string>();
 
-    static readonly Dictionary<SurvivorState, string> stateLabels = new()
+    public static readonly Dictionary<SurvivorState, string> stateLabels = new()
     {
         { SurvivorState.이동중,  "Moving"    },
         { SurvivorState.채집중,  "Gathering" },
@@ -233,6 +233,7 @@ public class SurvivorController : MonoBehaviour
     {
         bool current = detectionRange.gameObject.GetComponent<LineRenderer>().enabled;
         detectionRange.SetSelected(!current);
+        SurvivorInfoPanel.Instance?.Show(this);
     }
 
     void SetNewTarget()
