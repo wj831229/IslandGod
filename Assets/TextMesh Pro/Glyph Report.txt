@@ -1,0 +1,12 @@
+Font: Noto Sans KR  Style: Light
+Point Size: 18   Padding: 1   SP/PD Ratio: 5.6%
+
+Characters included: 11267/11267
+Missing characters: 0
+Excluded characters: 0
+
+Characters missing from font file:
+----------------------------------------
+
+Characters excluded from packing:
+----------------------------------------
