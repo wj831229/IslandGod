@@ -181,7 +181,7 @@ public class SurvivorController : MonoBehaviour
         if (item != null)
         {
             // 인벤토리에 추가
-            inventory.Add("코코넛");
+            inventory.Add("Coconut");
             Debug.Log($"{gameObject.name} 인벤토리: [{string.Join(", ", inventory)}]");
 
             SetState(SurvivorState.먹는중);
