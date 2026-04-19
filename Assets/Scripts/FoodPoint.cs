@@ -52,8 +52,9 @@ public class FoodPoint : MonoBehaviour
     void Update()
     {
         bool anyInRange = false;
-        foreach (var survivor in FindObjectsByType<SurvivorController>())
+        foreach (var survivor in SurvivorController.All)
         {
+            if (survivor == null) continue;
             float dist = Vector2.Distance(transform.position, survivor.transform.position);
             if (dist <= survivor.GetDetectionRadius())
             {
