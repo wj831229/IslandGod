@@ -209,12 +209,12 @@ public class SurvivorController : MonoBehaviour
         foreach (var hit in hits)
         {
             if (hit == null || hit.gameObject == null || !hit.gameObject.activeInHierarchy) continue;
-            FoodItem food = hit.GetComponent<FoodItem>();
-            if (food != null && food.foodPoint != null && food.foodPoint.currentAmount > 0)
-            {
-                targetFood = hit.gameObject;
-                break;
-            }
+            if (!hit.CompareTag("Food")) continue;
+            FoodItem item = hit.GetComponent<FoodItem>();
+            // 수량이 0이면 스킵
+            if (item != null && item.foodPoint != null && item.foodPoint.currentAmount <= 0) continue;
+            targetFood = hit.gameObject;
+            break;
         }
     }
 
