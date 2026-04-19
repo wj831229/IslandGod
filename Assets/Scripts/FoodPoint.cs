@@ -35,6 +35,9 @@ public class FoodPoint : MonoBehaviour
 
         iconRenderer = foodIcon.GetComponent<SpriteRenderer>();
 
+        // 처음엔 숨김
+        SetVisible(false);
+
         // 수량 텍스트 생성
         GameObject textObj = new GameObject("AmountText");
         textObj.transform.SetParent(foodIcon.transform);
@@ -46,6 +49,19 @@ public class FoodPoint : MonoBehaviour
         amountText.sortingOrder = 5;
 
         UpdateDisplay();
+    }
+
+    public void Reveal()
+    {
+        if (isRevealed) return;
+        isRevealed = true;
+        SetVisible(true);
+    }
+
+    void SetVisible(bool visible)
+    {
+        if (iconRenderer != null) iconRenderer.enabled = visible;
+        if (amountText != null) amountText.enabled = visible;
     }
 
     void UpdateDisplay()
