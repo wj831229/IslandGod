@@ -209,7 +209,12 @@ public class SurvivorController : MonoBehaviour
         foreach (var hit in hits)
         {
             if (hit == null || hit.gameObject == null || !hit.gameObject.activeInHierarchy) continue;
-            if (hit.CompareTag("Food")) { targetFood = hit.gameObject; break; }
+            FoodItem food = hit.GetComponent<FoodItem>();
+            if (food != null && food.foodPoint != null && food.foodPoint.currentAmount > 0)
+            {
+                targetFood = hit.gameObject;
+                break;
+            }
         }
     }
 
