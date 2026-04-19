@@ -26,14 +26,21 @@ public class DetectionRange : MonoBehaviour
         DrawCircle();
     }
 
+    void Update()
+    {
+        if (lineRenderer.enabled)
+            DrawCircle();
+    }
+
     void DrawCircle()
     {
+        Vector3 center = transform.position;
         for (int i = 0; i < 60; i++)
         {
             float angle = i * Mathf.PI * 2f / 60;
             float x = Mathf.Cos(angle) * radius;
             float y = Mathf.Sin(angle) * radius;
-            lineRenderer.SetPosition(i, new Vector3(x, y, 0));
+            lineRenderer.SetPosition(i, center + new Vector3(x, y, 0));
         }
     }
 
