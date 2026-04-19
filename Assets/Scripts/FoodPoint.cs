@@ -72,7 +72,10 @@ public class FoodPoint : MonoBehaviour
             var survivor = ViewManager.Instance.Selected;
             bool discovered = survivor != null && survivor.discoveredFoods.Contains(this);
             if (discovered)
+            {
+                SetVisible(true);
                 SetAlpha(currentAmount > 0 ? 1f : 0.35f);
+            }
             else
                 SetVisible(false);
         }
