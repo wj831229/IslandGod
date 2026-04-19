@@ -204,18 +204,21 @@ public class SurvivorController : MonoBehaviour
 
     void DetectFood()
     {
-        if (targetFood != null) return;
         float range = detectionRange.GetRadius();
 
         foreach (var food in FindObjectsByType<FoodItem>())
         {
             if (food == null || food.gameObject == null) continue;
-            if (food.foodPoint != null && food.foodPoint.currentAmount <= 0) continue;
-            if (Vector2.Distance(transform.position, food.transform.position) <= range)
-            {
+            float dist = Vector2.Distance(transform.position, food.transform.position);
+            if (dist > range) continue;
+
+            // 범위 안에 들어오면 먼저 공개
+            if (food.foodPoint != null)
+                food.foodPoint.Reveal();
+
+            // 수량 있고 아직 타겟 없으면 채집 대상으로
+            if (targetFood == null && (food.foodPoint == null || food.foodPoint.currentAmount > 0))
                 targetFood = food.gameObject;
-                return;
-            }
         }
     }
 
