@@ -42,16 +42,16 @@ public class SurvivorController : MonoBehaviour
 
     public static readonly Dictionary<SurvivorState, string> stateLabels = new()
     {
-        { SurvivorState.이동중,  "Moving"    },
-        { SurvivorState.채집중,  "Gathering" },
-        { SurvivorState.먹는중,  "Eating"    },
-        { SurvivorState.마시는중, "Drinking"  },
-        { SurvivorState.수면중,  "Sleeping"  },
-        { SurvivorState.건설중,  "Building"  },
-        { SurvivorState.전투중,  "Fighting"  },
-        { SurvivorState.대화중,  "Talking"   },
-        { SurvivorState.탈출중,  "Escaping"  },
-        { SurvivorState.사망,    "Dead"      },
+        { SurvivorState.이동중,  "이동중"  },
+        { SurvivorState.채집중,  "채집중"  },
+        { SurvivorState.먹는중,  "먹는중"  },
+        { SurvivorState.마시는중, "마시는중" },
+        { SurvivorState.수면중,  "수면중"  },
+        { SurvivorState.건설중,  "건설중"  },
+        { SurvivorState.전투중,  "전투중"  },
+        { SurvivorState.대화중,  "대화중"  },
+        { SurvivorState.탈출중,  "탈출중"  },
+        { SurvivorState.사망,    "사망"    },
     };
 
     void Start()
@@ -181,7 +181,7 @@ public class SurvivorController : MonoBehaviour
         if (item != null)
         {
             // 인벤토리에 추가
-            inventory.Add("Coconut");
+            inventory.Add("코코넛");
             Debug.Log($"{gameObject.name} 인벤토리: [{string.Join(", ", inventory)}]");
 
             SetState(SurvivorState.먹는중);
