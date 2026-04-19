@@ -56,15 +56,17 @@ public class SurvivorInfoPanel : MonoBehaviour
         nameText  = CreateText("NameText",  panel, new Vector2(0, -40),  22, FontStyles.Bold);
         CreateLabel("StateLabel",  panel, new Vector2(0, -85),  "[ 상태 ]",  13);
         stateText = CreateText("StateText", panel, new Vector2(0, -112), 18);
-        CreateLabel("HungerLabel", panel, new Vector2(0, -150), "[ 배고픔 ]", 13);
-        hungerText = CreateText("HungerText", panel, new Vector2(0, -176), 16);
-        CreateLabel("InvLabel",    panel, new Vector2(0, -215), "[ 인벤토리 ]", 13);
+        CreateLabel("HealthLabel", panel, new Vector2(0, -150), "[ 체력 ]", 13);
+        healthText = CreateText("HealthText", panel, new Vector2(0, -176), 16);
+        CreateLabel("HungerLabel", panel, new Vector2(0, -215), "[ 배고픔 ]", 13);
+        hungerText = CreateText("HungerText", panel, new Vector2(0, -241), 16);
+        CreateLabel("InvLabel",    panel, new Vector2(0, -280), "[ 인벤토리 ]", 13);
 
         // 슬롯 그리드 (5x2)
         float slotSize = 48f;
         float gap = 6f;
         float startX = -((SLOTS_PER_ROW * slotSize + (SLOTS_PER_ROW - 1) * gap) / 2f) + slotSize / 2f;
-        float startY = -255f;
+        float startY = -320f;
 
         for (int i = 0; i < SLOT_COUNT; i++)
         {
@@ -162,6 +164,10 @@ public class SurvivorInfoPanel : MonoBehaviour
             SurvivorState.사망   => Color.gray,
             _ => Color.white
         };
+
+        healthText.text = $"{(int)currentSurvivor.health} / {(int)currentSurvivor.maxHealth}";
+        healthText.color = currentSurvivor.health > 60 ? Color.green
+                         : currentSurvivor.health > 30 ? Color.yellow : Color.red;
 
         hungerText.text = $"{(int)currentSurvivor.hunger} / 100";
         hungerText.color = currentSurvivor.hunger > 50 ? Color.green
