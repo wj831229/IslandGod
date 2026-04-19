@@ -242,6 +242,24 @@ public class SurvivorController : MonoBehaviour
         targetFoodPoint = closest;
     }
 
+    void StartSleep()
+    {
+        isSleeping = true;
+        isGathering = false;
+        isEating = false;
+        targetFoodPoint = null;
+        SetState(SurvivorState.수면중);
+        Debug.Log($"[{gameObject.name}] 수면 시작");
+    }
+
+    void WakeUp()
+    {
+        isSleeping = false;
+        SetNewTarget();
+        SetState(SurvivorState.이동중);
+        Debug.Log($"[{gameObject.name}] 기상");
+    }
+
     void StartGather()
     {
         isGathering = true;
