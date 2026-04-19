@@ -1,9 +1,11 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public enum SurvivorState
 {
     이동중,
+    채집중,
     먹는중,
     마시는중,
     수면중,
@@ -28,6 +30,28 @@ public class SurvivorController : MonoBehaviour
 
     private SurvivorState currentState = SurvivorState.이동중;
     private TextMeshPro statusText;
+
+    // 채집 관련
+    private float gatherTimer = 0f;
+    private const float gatherDuration = 3f;
+    private bool isGathering = false;
+
+    // 인벤토리
+    public List<string> inventory = new List<string>();
+
+    static readonly Dictionary<SurvivorState, string> stateLabels = new()
+    {
+        { SurvivorState.이동중,  "Moving"    },
+        { SurvivorState.채집중,  "Gathering" },
+        { SurvivorState.먹는중,  "Eating"    },
+        { SurvivorState.마시는중, "Drinking"  },
+        { SurvivorState.수면중,  "Sleeping"  },
+        { SurvivorState.건설중,  "Building"  },
+        { SurvivorState.전투중,  "Fighting"  },
+        { SurvivorState.대화중,  "Talking"   },
+        { SurvivorState.탈출중,  "Escaping"  },
+        { SurvivorState.사망,    "Dead"      },
+    };
 
     void Start()
     {
@@ -59,19 +83,6 @@ public class SurvivorController : MonoBehaviour
         UpdateStatusText();
     }
 
-    static readonly System.Collections.Generic.Dictionary<SurvivorState, string> stateLabels = new()
-    {
-        { SurvivorState.이동중,  "Moving"   },
-        { SurvivorState.먹는중,  "Eating"   },
-        { SurvivorState.마시는중, "Drinking" },
-        { SurvivorState.수면중,  "Sleeping" },
-        { SurvivorState.건설중,  "Building" },
-        { SurvivorState.전투중,  "Fighting" },
-        { SurvivorState.대화중,  "Talking"  },
-        { SurvivorState.탈출중,  "Escaping" },
-        { SurvivorState.사망,    "Dead"     },
-    };
-
     void UpdateStatusText()
     {
         if (statusText == null) return;
@@ -79,10 +90,11 @@ public class SurvivorController : MonoBehaviour
 
         statusText.color = currentState switch
         {
-            SurvivorState.먹는중 => Color.green,
-            SurvivorState.전투중 => Color.red,
-            SurvivorState.수면중 => new Color(0.5f, 0.7f, 1f),
-            SurvivorState.사망   => Color.gray,
+            SurvivorState.채집중  => Color.yellow,
+            SurvivorState.먹는중  => Color.green,
+            SurvivorState.전투중  => Color.red,
+            SurvivorState.수면중  => new Color(0.5f, 0.7f, 1f),
+            SurvivorState.사망    => Color.gray,
             _ => Color.white
         };
     }
@@ -101,7 +113,24 @@ public class SurvivorController : MonoBehaviour
         }
 
         if (targetFood != null && !targetFood.activeInHierarchy)
+        {
             targetFood = null;
+            isGathering = false;
+            gatherTimer = 0f;
+        }
+
+        // 채집 중이면 이동 없이 타이머만 진행
+        if (isGathering)
+        {
+            gatherTimer += Time.deltaTime;
+            if (gatherTimer >= gatherDuration)
+            {
+                isGathering = false;
+                gatherTimer = 0f;
+                CompleteGather();
+            }
+            return;
+        }
 
         DetectFood();
 
@@ -116,7 +145,7 @@ public class SurvivorController : MonoBehaviour
 
             float dist = Vector2.Distance(transform.position, targetFood.transform.position);
             if (dist < 0.3f)
-                EatFood();
+                StartGather();
         }
         else
         {
@@ -134,6 +163,48 @@ public class SurvivorController : MonoBehaviour
                 moveSpeed * Time.deltaTime
             );
         }
+    }
+
+    void StartGather()
+    {
+        isGathering = true;
+        gatherTimer = 0f;
+        SetState(SurvivorState.채집중);
+    }
+
+    void CompleteGather()
+    {
+        if (targetFood == null) return;
+
+        FoodItem item = targetFood.GetComponent<FoodItem>();
+        if (item != null)
+        {
+            // 인벤토리에 추가
+            inventory.Add("코코넛");
+            Debug.Log($"{gameObject.name} 인벤토리: [{string.Join(", ", inventory)}]");
+
+            SetState(SurvivorState.먹는중);
+
+            // 배고픔 회복
+            if (item.foodPoint != null)
+            {
+                hunger = Mathf.Min(hunger + item.hungerRestore, 100f);
+                item.foodPoint.OnFoodTaken();
+            }
+        }
+
+        if (targetFood != null)
+            Destroy(targetFood);
+
+        targetFood = null;
+
+        // 잠깐 먹는 상태 유지 후 이동으로 전환
+        Invoke(nameof(BackToMoving), 1f);
+    }
+
+    void BackToMoving()
+    {
+        SetState(SurvivorState.이동중);
     }
 
     void DetectFood()
@@ -155,26 +226,6 @@ public class SurvivorController : MonoBehaviour
                 break;
             }
         }
-    }
-
-    void EatFood()
-    {
-        if (targetFood == null) return;
-
-        SetState(SurvivorState.먹는중);
-
-        FoodItem item = targetFood.GetComponent<FoodItem>();
-        if (item != null && item.foodPoint != null)
-        {
-            hunger = Mathf.Min(hunger + item.hungerRestore, 100f);
-            Debug.Log(gameObject.name + " 음식 획득! 배고픔: " + hunger);
-            item.foodPoint.OnFoodTaken();
-        }
-
-        if (targetFood != null)
-            Destroy(targetFood);
-
-        targetFood = null;
     }
 
     void OnMouseDown()
