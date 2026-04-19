@@ -16,6 +16,8 @@ public class FoodPoint : MonoBehaviour
         SpawnIcon();
     }
 
+    public bool isRevealed = false;
+
     void SpawnIcon()
     {
         if (foodPrefab == null)
