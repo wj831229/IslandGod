@@ -857,7 +857,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0e1a69ae561f1424c879bdc93133d9f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FoodPoint
-  foodPrefab: {fileID: 266712604}
+  foodPrefab: {fileID: 2544906903993483836, guid: 4f23d4d7925fad34eb654d0e10a218ee, type: 3}
   maxAmount: 5
   currentAmount: 5
 --- !u!4 &878179879
@@ -870,6 +870,50 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1, y: 1, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1004719372
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1004719374}
+  - component: {fileID: 1004719373}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1004719373
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004719372}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0580792b3766c548b069be500a5bc0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SurvivorInfoPanel
+--- !u!4 &1004719374
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1004719372}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0.11685, y: -0.37516, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -912,6 +956,7 @@ MonoBehaviour:
   hunger: 100
   hungerDecreaseRate: 2
   wanderInterval: 5
+  inventory: []
 --- !u!50 &1058458719
 Rigidbody2D:
   serializedVersion: 5
@@ -1477,3 +1522,4 @@ SceneRoots:
   - {fileID: 1347269516}
   - {fileID: 192602310}
   - {fileID: 878179879}
+  - {fileID: 1004719374}
