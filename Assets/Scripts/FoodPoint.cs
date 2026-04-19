@@ -61,10 +61,6 @@ public class FoodPoint : MonoBehaviour
             c.a = currentAmount > 0 ? 1f : 0.35f;
             iconRenderer.color = c;
         }
-
-        // 수량 0이면 Food 태그 제거 (채집 불가)
-        if (foodIcon != null)
-            foodIcon.tag = currentAmount > 0 ? "Food" : "Untagged";
     }
 
     public void OnFoodTaken()
