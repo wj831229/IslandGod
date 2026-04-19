@@ -168,18 +168,12 @@ public class SurvivorInfoPanel : MonoBehaviour
 
         // 슬롯 채우기
         var inv = currentSurvivor.inventory;
-        // 슬롯별 아이템 집계 (같은 아이템은 같은 슬롯에 묶기)
-        var counts = new Dictionary<string, int>();
-        foreach (var item in inv)
-            counts[item] = counts.TryGetValue(item, out int c) ? c + 1 : 1;
-
-        var keys = new List<string>(counts.Keys);
         for (int i = 0; i < SLOT_COUNT; i++)
         {
-            if (i < keys.Count)
+            if (i < inv.Count)
             {
                 slotBgs[i].color = slotFilled;
-                slotTexts[i].text = $"{keys[i]}\nx{counts[keys[i]]}";
+                slotTexts[i].text = $"{inv[i].itemName}\n{inv[i].count}/{inv[i].maxStack}";
             }
             else
             {
