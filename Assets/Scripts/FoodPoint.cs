@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class FoodPoint : MonoBehaviour
 {
@@ -6,47 +7,61 @@ public class FoodPoint : MonoBehaviour
     public int maxAmount = 5;
     public int currentAmount = 5;
 
-    private GameObject spawnedFood;
+    private List<GameObject> spawnedFoods = new();
 
     void Start()
     {
-        SpawnFood();
+        SpawnAll();
     }
 
-    public void SpawnFood()
+    void SpawnAll()
     {
-        if (currentAmount <= 0) return;
-        if (spawnedFood != null) return;
         if (foodPrefab == null)
         {
-            Debug.LogError($"[FoodPoint] foodPrefab is null on {gameObject.name}. Assign it in Inspector.", this);
+            Debug.LogError($"[FoodPoint] foodPrefab is null on {gameObject.name}", this);
             return;
         }
 
-        spawnedFood = Instantiate(foodPrefab, transform.position, Quaternion.identity);
-        FoodItem item = spawnedFood.GetComponent<FoodItem>();
-        if (item == null)
-            item = spawnedFood.AddComponent<FoodItem>();
+        for (int i = 0; i < currentAmount; i++)
+            SpawnOne(i);
+    }
+
+    void SpawnOne(int index)
+    {
+        if (foodPrefab == null) return;
+
+        // 포인트 주변에 약간씩 퍼뜨려서 배치
+        float angle = index * (360f / maxAmount) * Mathf.Deg2Rad;
+        float radius = 0.2f;
+        Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius, 0);
+        Vector3 pos = transform.position + offset;
+
+        GameObject food = Instantiate(foodPrefab, pos, Quaternion.identity);
+        FoodItem item = food.GetComponent<FoodItem>();
+        if (item == null) item = food.AddComponent<FoodItem>();
         item.foodPoint = this;
         item.hungerRestore = 40f;
+
+        spawnedFoods.Add(food);
     }
 
     public void OnFoodTaken()
     {
         currentAmount--;
-        spawnedFood = null;
 
-        if (currentAmount > 0)
-            Invoke("SpawnFood", 2f);
+        // 파괴된 오브젝트 목록 정리
+        spawnedFoods.RemoveAll(f => f == null);
+
+        Debug.Log($"[FoodPoint] 남은 수량: {currentAmount}/{maxAmount}");
     }
 
+    // DayNightCycle에서 밤 종료 시 호출
     public void Restock()
     {
-        if (currentAmount < maxAmount)
-        {
-            currentAmount++;
-            if (spawnedFood == null)
-                SpawnFood();
-        }
+        if (currentAmount >= maxAmount) return;
+
+        currentAmount++;
+        SpawnOne(spawnedFoods.Count);
+        Debug.Log($"[FoodPoint] 리스폰 +1 → {currentAmount}/{maxAmount}");
     }
 }
