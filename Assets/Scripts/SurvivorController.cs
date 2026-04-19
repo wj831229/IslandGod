@@ -168,7 +168,7 @@ public class SurvivorController : MonoBehaviour
             item.foodPoint.OnFoodTaken();
 
         Debug.Log($"[채집 완료] {name} 추가 → {GetInventorySummary()}");
-        Destroy(targetFood);
+        // 아이콘은 유지 (FoodPoint가 관리), targetFood만 해제
         targetFood = null;
         SetState(SurvivorState.이동중);
     }
