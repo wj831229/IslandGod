@@ -14,6 +14,8 @@ public class DayNightCycle : MonoBehaviour
         Instance = this;
     }
 
+    private bool wasNight = false;
+
     void Update()
     {
         currentTime += Time.deltaTime;
@@ -25,7 +27,17 @@ public class DayNightCycle : MonoBehaviour
             Debug.Log("Day " + currentDay + " 시작!");
         }
 
-        isDay = currentTime < dayLength / 2f;
+        bool nightNow = currentTime >= dayLength / 2f;
+
+        // 밤 → 낮 전환 시점 = 밤 종료 → FoodPoint 리스폰
+        if (wasNight && !nightNow)
+        {
+            foreach (var fp in FindObjectsByType<FoodPoint>(FindObjectsSortMode.None))
+                fp.Restock();
+        }
+
+        wasNight = nightNow;
+        isDay = !nightNow;
     }
 
     public float GetTimeRatio()
