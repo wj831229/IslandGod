@@ -62,7 +62,8 @@ public class FoodPoint : MonoBehaviour
     {
         if (ViewManager.Instance == null || ViewManager.Instance.IsGodView)
         {
-            // 신의 시점: 모두 선명하게
+            // 신의 시점: 모두 표시
+            SetVisible(true);
             SetAlpha(currentAmount > 0 ? 1f : 0.35f);
         }
         else
