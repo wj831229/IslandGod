@@ -280,11 +280,14 @@ public class SurvivorController : MonoBehaviour
         Debug.Log($"[먹는중] {slot.itemName} 섭취 시작, 배고픔: {hunger:F0}");
     }
 
+    public void SetRingVisible(bool visible)
+    {
+        detectionRange?.SetSelected(visible);
+    }
+
     void OnMouseDown()
     {
-        bool current = detectionRange.GetComponent<LineRenderer>().enabled;
-        detectionRange.SetSelected(!current);
-        SurvivorInfoPanel.Instance?.Show(this);
+        ViewManager.Instance?.Select(this);
     }
 
     void SetNewTarget()
