@@ -29,6 +29,7 @@ public class SurvivorController : MonoBehaviour
     private DetectionRange detectionRange;
 
     private SurvivorState currentState = SurvivorState.이동중;
+    public SurvivorState CurrentState => currentState;
     private TextMeshPro statusText;
 
     // 채집 관련
