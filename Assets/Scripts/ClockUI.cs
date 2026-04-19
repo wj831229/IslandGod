@@ -20,9 +20,9 @@ public class ClockUI : MonoBehaviour
         dayText.text = "DAY " + day;
 
         // 시간 텍스트
-        timeText.text = currentTime + " / 300";
+        timeText.text = currentTime + " / " + (int)DayNightCycle.Instance.dayLength;
 
-        // 시계 바늘 회전 (0초 = 0도, 300초 = 360도)
+        // 시계 바늘 회전 (0초 = 0도, dayLength초 = 360도)
         float angle = ratio * 360f;
         clockHand.localRotation = Quaternion.Euler(0, 0, -angle);
 
