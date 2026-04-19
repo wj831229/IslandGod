@@ -52,6 +52,12 @@ public class SurvivorController : MonoBehaviour
         { SurvivorState.사망,    "사망"    },
     };
 
+    // 씬에 존재하는 모든 표류자 목록 (FoodPoint가 참조)
+    public static readonly List<SurvivorController> All = new();
+
+    void OnEnable()  => All.Add(this);
+    void OnDisable() => All.Remove(this);
+
     void Start()
     {
         detectionRange = GetComponent<DetectionRange>();
