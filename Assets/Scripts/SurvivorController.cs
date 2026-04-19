@@ -21,6 +21,7 @@ public class SurvivorController : MonoBehaviour
     public float moveSpeed = 1f;
     public float hunger = 100f;
     public float hungerDecreaseRate = 2f;
+    public float hungerEatThreshold = 25f;  // 이 수치 이하면 인벤토리에서 꺼내 먹음
 
     private Vector2 targetPosition;
     private float wanderTimer = 0f;
@@ -32,10 +33,16 @@ public class SurvivorController : MonoBehaviour
     public SurvivorState CurrentState => currentState;
     private TextMeshPro statusText;
 
-    // 채집 관련
+    // 채집
     private float gatherTimer = 0f;
     private const float gatherDuration = 3f;
     private bool isGathering = false;
+
+    // 식사
+    private float eatTimer = 0f;
+    private const float eatDuration = 2f;
+    private bool isEating = false;
+    private float pendingHungerRestore = 0f;
 
     // 인벤토리
     public List<string> inventory = new List<string>();
@@ -108,19 +115,34 @@ public class SurvivorController : MonoBehaviour
         if (hunger <= 0)
         {
             SetState(SurvivorState.사망);
-            Debug.Log(gameObject.name + " 사망!");
             Destroy(gameObject);
             return;
         }
 
-        if (targetFood != null && !targetFood.activeInHierarchy)
+        // 식사 중
+        if (isEating)
         {
-            targetFood = null;
-            isGathering = false;
-            gatherTimer = 0f;
+            eatTimer += Time.deltaTime;
+            if (eatTimer >= eatDuration)
+            {
+                isEating = false;
+                eatTimer = 0f;
+                hunger = Mathf.Min(hunger + pendingHungerRestore, 100f);
+                pendingHungerRestore = 0f;
+                Debug.Log($"{gameObject.name} 식사 완료! 배고픔: {hunger:F0}");
+                SetState(SurvivorState.이동중);
+            }
+            return;
         }
 
-        // 채집 중이면 이동 없이 타이머만 진행
+        // 배고프고 인벤토리에 음식 있으면 꺼내 먹기
+        if (hunger <= hungerEatThreshold && inventory.Count > 0)
+        {
+            StartEating();
+            return;
+        }
+
+        // 채집 중
         if (isGathering)
         {
             gatherTimer += Time.deltaTime;
@@ -131,6 +153,13 @@ public class SurvivorController : MonoBehaviour
                 CompleteGather();
             }
             return;
+        }
+
+        if (targetFood != null && !targetFood.activeInHierarchy)
+        {
+            targetFood = null;
+            isGathering = false;
+            gatherTimer = 0f;
         }
 
         DetectFood();
@@ -180,32 +209,30 @@ public class SurvivorController : MonoBehaviour
         FoodItem item = targetFood.GetComponent<FoodItem>();
         if (item != null)
         {
-            // 인벤토리에 추가
             inventory.Add("코코넛");
-            Debug.Log($"{gameObject.name} 인벤토리: [{string.Join(", ", inventory)}]");
+            Debug.Log($"{gameObject.name} 채집 완료 → 인벤토리: [{string.Join(", ", inventory)}]");
 
-            SetState(SurvivorState.먹는중);
-
-            // 배고픔 회복
             if (item.foodPoint != null)
-            {
-                hunger = Mathf.Min(hunger + item.hungerRestore, 100f);
                 item.foodPoint.OnFoodTaken();
-            }
         }
 
         if (targetFood != null)
             Destroy(targetFood);
 
         targetFood = null;
-
-        // 잠깐 먹는 상태 유지 후 이동으로 전환
-        Invoke(nameof(BackToMoving), 1f);
+        SetState(SurvivorState.이동중);
     }
 
-    void BackToMoving()
+    void StartEating()
     {
-        SetState(SurvivorState.이동중);
+        string food = inventory[0];
+        inventory.RemoveAt(0);
+
+        pendingHungerRestore = 40f;
+        isEating = true;
+        eatTimer = 0f;
+        SetState(SurvivorState.먹는중);
+        Debug.Log($"{gameObject.name} {food} 섭취 시작 (배고픔: {hunger:F0})");
     }
 
     void DetectFood()
