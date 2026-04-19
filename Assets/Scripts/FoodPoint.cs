@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
 
 public class FoodPoint : MonoBehaviour
 {
@@ -7,9 +8,17 @@ public class FoodPoint : MonoBehaviour
     public int maxAmount = 5;
     public int currentAmount = 5;
 
+    [Header("발견 설정")]
+    [Range(0f, 1f)]
+    public float discoveryChance = 1f;  // 1 = 무조건 발견, 0.5 = 50% 확률
+    public bool isDiscovered = false;   // true로 설정 시 처음부터 보임
+
     private GameObject foodIcon;
     private TextMeshPro amountText;
     private SpriteRenderer iconRenderer;
+
+    // 현재 범위 안에 있는 표류자 추적 (진입 순간 판단용)
+    private HashSet<SurvivorController> survivorsInRange = new();
 
     void Start()
     {
@@ -33,8 +42,8 @@ public class FoodPoint : MonoBehaviour
 
         iconRenderer = foodIcon.GetComponent<SpriteRenderer>();
 
-        // 처음엔 숨김
-        SetVisible(false);
+        // 처음 발견 상태에 따라 가시성 결정
+        SetVisible(isDiscovered);
 
         // 수량 텍스트 생성
         GameObject textObj = new GameObject("AmountText");
@@ -51,18 +60,50 @@ public class FoodPoint : MonoBehaviour
 
     void Update()
     {
-        bool anyInRange = false;
+        // 이미 발견된 아이템은 항상 표시, 더 이상 체크 불필요
+        if (isDiscovered)
+        {
+            SetVisible(true);
+            return;
+        }
+
+        // 파괴된 표류자 정리
+        survivorsInRange.RemoveWhere(s => s == null);
+
         foreach (var survivor in SurvivorController.All)
         {
             if (survivor == null) continue;
+
             float dist = Vector2.Distance(transform.position, survivor.transform.position);
-            if (dist <= survivor.GetDetectionRadius())
+            bool inRange = dist <= survivor.GetDetectionRadius();
+            bool wasInRange = survivorsInRange.Contains(survivor);
+
+            if (inRange && !wasInRange)
             {
-                anyInRange = true;
-                break;
+                // 진입 순간 → 발견 확률 체크
+                survivorsInRange.Add(survivor);
+
+                float chance = Mathf.Clamp01(discoveryChance + survivor.discoveryBonus);
+                float roll = Random.value;
+
+                if (roll <= chance)
+                {
+                    isDiscovered = true;
+                    SetVisible(true);
+                    Debug.Log($"[발견] {gameObject.name} | 확률 {chance*100:F0}% | 굴림 {roll*100:F0}% → 성공");
+                    return;
+                }
+                else
+                {
+                    Debug.Log($"[미발견] {gameObject.name} | 확률 {chance*100:F0}% | 굴림 {roll*100:F0}% → 실패");
+                }
+            }
+            else if (!inRange && wasInRange)
+            {
+                // 이탈 → 다음 진입 시 재체크 허용
+                survivorsInRange.Remove(survivor);
             }
         }
-        SetVisible(anyInRange);
     }
 
     void SetVisible(bool visible)
@@ -81,7 +122,6 @@ public class FoodPoint : MonoBehaviour
 
         if (iconRenderer != null)
         {
-            // 수량 0이면 반투명하게
             var c = iconRenderer.color;
             c.a = currentAmount > 0 ? 1f : 0.35f;
             iconRenderer.color = c;
